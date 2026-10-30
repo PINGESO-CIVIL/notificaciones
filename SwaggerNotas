@@ -1,0 +1,5 @@
+Grupo10: gateway notif
+Servicio genérico que recibe payload (asunto, cuerpo) y dispara un email/notif.
+https://editor.swagger.io/
+
+
