@@ -22,7 +22,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: tareas_db
+          POSTGRES_DB: notificaciones_db
         ports:
           - 5432:5432
         options: >-
@@ -42,12 +42,12 @@ jobs:
       - run: cd apps/api && go mod verify
       - name: Ejecutar pruebas y generar cobertura
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/tareas_db?sslmode=disable
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/notificaciones_db?sslmode=disable
         run: |
           cd apps/api
           go test -v -coverprofile=../../coverage.out ./...
           cd ../..
-          sed -i 's|tarea-api/|apps/api/|g' coverage.out
+          sed -i 's|notificaciones-api/|apps/api/|g' coverage.out
       - name: Sanitizar variables SonarQube
         run: |
           CLEAN_URL=$(echo "${{ secrets.SONAR_HOST_URL }}" | tr -d '[:space:]')

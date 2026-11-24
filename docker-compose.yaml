@@ -4,13 +4,13 @@ name: notificaciones
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: postgres_db
+    container_name: notificaciones_postgres
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=notificaciones_db
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:5440:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -19,30 +19,42 @@ services:
       timeout: 5s
       retries: 5
 
+  mailpit:
+    image: axllent/mailpit:v1.31.3
+    container_name: notificaciones_mailpit
+    ports:
+      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:1025:1025"
+
   backend:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-    container_name: go_backend
+    container_name: notificaciones_backend
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:5101:8080"
     environment:
       - API_PORT=8080
       - API_ENV=dev
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/notificaciones_db?sslmode=disable
-      - FRONTEND_URL=http://localhost:3000
+      - FRONTEND_URL=http://localhost:5100
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+      - SMTP_FROM=no-responder@notificaciones.local
       - TZ=America/Santiago
     depends_on:
       postgres:
         condition: service_healthy
+      mailpit:
+        condition: service_started
 
   frontend:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-    container_name: vue_frontend
+    container_name: notificaciones_frontend
     ports:
-      - "127.0.0.1:3000:8080"
+      - "127.0.0.1:5100:8080"
     depends_on:
       - backend
 
