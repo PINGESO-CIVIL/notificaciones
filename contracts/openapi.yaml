@@ -1,20 +1,18 @@
 openapi: 3.1.0
 info:
-  title: API Gestor de Tareas
-  description: Microservicio de ejemplo para la gestión de tareas, diseñado para enseñar el estándar OpenAPI y la integración con Go, Vue y PostgreSQL.
+  title: API Gateway de Notificaciones (Grupo 10)
+  description: Microservicio genérico encargado de recibir payloads de notificación (destinatario, asunto, cuerpo) y despachar correos electrónicos vía SMTP.
   version: 1.0.0
   contact:
-    name: Equipo Docente
+    name: Grupo 10 - PINGESO
 
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:5101
     description: Entorno de Desarrollo Local
-  - url: https://api.midominio.cl
-    description: Entorno de Producción
 
 tags:
-  - name: Tareas
-    description: Operaciones CRUD completas para la entidad Tareas
+  - name: Notificaciones
+    description: Operaciones de envío y consulta de notificaciones por correo electrónico
   - name: Salud
     description: Verificaciones de salud y observabilidad mínima
 
@@ -51,179 +49,135 @@ paths:
         '503':
           description: Base de datos no disponible
 
-  /api/v1/tareas:
+  /api/v1/notificaciones:
     get:
       tags:
-        - Tareas
-      summary: Lista todas las tareas
-      description: Retorna un listado de tareas. Permite filtrar por estado mediante parámetros de query.
-      parameters:
-        - name: estado
-          in: query
-          description: Filtra las tareas por su estado actual
-          required: false
-          schema:
-            type: string
-            enum: [pendiente, en_progreso, completado]
+        - Notificaciones
+      summary: Lista el historial de notificaciones
+      description: Retorna el listado de notificaciones registradas en el gateway.
       responses:
         '200':
-          description: Lista de tareas obtenida exitosamente
+          description: Lista de notificaciones obtenida exitosamente
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TareaResponse'
+                  $ref: '#/components/schemas/NotificacionResponse'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
     post:
       tags:
-        - Tareas
-      summary: Crea una nueva tarea
+        - Notificaciones
+      summary: Envía o encola una notificación por correo
+      description: Recibe destinatario, asunto y cuerpo para despachar un correo electrónico.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          description: Clave opcional para evitar envíos duplicados ante reintentos de red.
+          schema:
+            type: string
+            format: uuid
+        - name: X-Request-Id
+          in: header
+          required: false
+          description: Identificador de correlación propagado entre microservicios.
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TareaRequest'
+              $ref: '#/components/schemas/NotificacionRequest'
       responses:
         '201':
-          description: Tarea creada exitosamente
+          description: Notificación procesada y registrada exitosamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TareaResponse'
+                $ref: '#/components/schemas/NotificacionResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/tareas/{id}:
-    get:
-      tags:
-        - Tareas
-      summary: Obtiene una tarea específica por su ID
-      parameters:
-        - $ref: '#/components/parameters/TareaId'
-      responses:
-        '200':
-          description: Tarea encontrada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TareaResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    put:
-      tags:
-        - Tareas
-      summary: Actualiza el estado o título de una tarea
-      parameters:
-        - $ref: '#/components/parameters/TareaId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TareaRequest'
-      responses:
-        '200':
-          description: Tarea actualizada exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TareaResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    delete:
-      tags:
-        - Tareas
-      summary: Elimina una tarea del sistema
-      parameters:
-        - $ref: '#/components/parameters/TareaId'
-      responses:
-        '204':
-          description: Tarea eliminada exitosamente (No devuelve contenido)
-        '404':
-          $ref: '#/components/responses/NotFound'
-
 components:
-  parameters:
-    TareaId:
-      name: id
-      in: path
-      required: true
-      description: ID único de la tarea
-      schema:
-        type: string
-        example: "1"
-
   schemas:
-    # Lo que el usuario envía para crear o editar
-    TareaRequest:
+    NotificacionRequest:
       type: object
       required:
-        - titulo
+        - destinatario
+        - asunto
+        - cuerpo
       properties:
-        titulo:
+        destinatario:
           type: string
-          description: El título o descripción breve de la tarea
-          example: "Configurar contenedores Docker"
-        estado:
+          format: email
+          description: Dirección de correo electrónico de destino
+          example: "usuario@usach.cl"
+        asunto:
           type: string
-          enum: [pendiente, en_progreso, completado]
-          default: pendiente
-          example: "en_progreso"
+          minLength: 1
+          maxLength: 255
+          description: Asunto del correo electrónico
+          example: "Confirmación de reserva"
+        cuerpo:
+          type: string
+          minLength: 1
+          description: Contenido textual o HTML del correo electrónico
+          example: "Su solicitud ha sido confirmada exitosamente."
 
-    # Lo que el backend devuelve (Incluye lo enviado + campos autogenerados)
-    TareaResponse:
+    NotificacionResponse:
       allOf:
-        - $ref: '#/components/schemas/TareaRequest'
+        - $ref: '#/components/schemas/NotificacionRequest'
         - type: object
           properties:
             id:
               type: string
-              description: Identificador único autogenerado en la base de datos
-              example: "1"
+              format: uuid
+              description: Identificador único de la notificación
+              example: "550e8400-e29b-41d4-a716-446655440000"
+            estado:
+              type: string
+              enum: [pendiente, enviado_mock, enviado, fallido]
+              example: "enviado_mock"
             fecha_creacion:
               type: string
               format: date-time
-              example: "2026-10-30T14:30:00Z"
+              example: "2026-11-24T17:30:00Z"
 
-    ErrorEstandar:
+    ProblemaRFC9457:
       type: object
       properties:
-        codigo:
+        type:
+          type: string
+          example: "about:blank"
+        title:
+          type: string
+          example: "Solicitud inválida"
+        status:
           type: integer
           example: 400
-        mensaje:
+        detail:
           type: string
-          example: "Datos de entrada inválidos."
-        detalles:
+          example: "Los campos 'destinatario', 'asunto' y 'cuerpo' son obligatorios."
+        instance:
           type: string
-          example: "El campo 'titulo' es obligatorio."
+          example: "/api/v1/notificaciones"
 
   responses:
     BadRequest:
-      description: Petición mal formada (ej. JSON inválido o falta un campo requerido)
+      description: Petición mal formada o datos de entrada inválidos
       content:
-        application/json:
+        application/problem+json:
           schema:
-            $ref: '#/components/schemas/ErrorEstandar'
-    NotFound:
-      description: El recurso con el ID indicado no existe en la base de datos
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEstandar'
+            $ref: '#/components/schemas/ProblemaRFC9457'
     InternalServerError:
-      description: Error interno del servidor (ej. pérdida de conexión con PostgreSQL)
+      description: Error interno del servidor o falla en persistencia/SMTP
       content:
-        application/json:
+        application/problem+json:
           schema:
-            $ref: '#/components/schemas/ErrorEstandar'
+            $ref: '#/components/schemas/ProblemaRFC9457'

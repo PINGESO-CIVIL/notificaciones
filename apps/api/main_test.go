@@ -15,7 +15,7 @@ func TestHealthz(t *testing.T) {
 	mux.ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusOK {
-		t.Fatalf("esperaba status 200 para /healthz, obtuve %d", rec.Code)
+		t.Fatalf("Se esperaba status 200 para /healthz, se obtuvo %d", rec.Code)
 	}
 
 	body, err := io.ReadAll(rec.Body)
@@ -24,7 +24,7 @@ func TestHealthz(t *testing.T) {
 	}
 
 	if string(body) != "ok" {
-		t.Errorf("esperaba 'ok', obtuve '%s'", string(body))
+		t.Errorf("Se esperaba 'ok', se obtuvo '%s'", string(body))
 	}
 }
 
@@ -37,20 +37,20 @@ func TestReadyz(t *testing.T) {
 
 	// Sin DB conectada da 503, con DB da 200
 	if rec.Code != http.StatusOK && rec.Code != http.StatusServiceUnavailable {
-		t.Fatalf("esperaba status 200 o 503 para /readyz, obtuve %d", rec.Code)
+		t.Fatalf("Se esperaba status 200 o 503 para /readyz, se obtuvo %d", rec.Code)
 	}
 }
 
 func TestRouterRoutes(t *testing.T) {
 	mux := setupRouter()
 
-	// Probar OPTIONS en /api/tareas y /api/v1/tareas
-	for _, path := range []string{"/api/tareas", "/api/v1/tareas"} {
+	// Probar OPTIONS en /api/notificaciones y /api/v1/notificaciones
+	for _, path := range []string{"/api/notificaciones", "/api/v1/notificaciones"} {
 		req := httptest.NewRequest(http.MethodOptions, path, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
 		if rec.Code != http.StatusOK {
-			t.Errorf("esperaba status 200 para OPTIONS %s, obtuve %d", path, rec.Code)
+			t.Errorf("Se esperaba status 200 para OPTIONS %s, se obtuvo %d", path, rec.Code)
 		}
 	}
 }

@@ -16,7 +16,7 @@ var DB *sql.DB
 func ConnectDB() {
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		databaseURL = "postgres://postgres:postgres@localhost:5432/tareas_db?sslmode=disable"
+		databaseURL = "postgres://postgres:postgres@localhost:5440/notificaciones_db?sslmode=disable"
 	}
 
 	var err error
@@ -41,29 +41,21 @@ func ConnectDB() {
 }
 
 func initSchema() {
+	if DB == nil {
+		return
+	}
+
 	query := `
-	CREATE TABLE IF NOT EXISTS tareas (
+	CREATE TABLE IF NOT EXISTS notificaciones (
 		id VARCHAR(36) PRIMARY KEY,
-		titulo VARCHAR(255) NOT NULL,
+		destinatario VARCHAR(255) NOT NULL,
+		asunto VARCHAR(255) NOT NULL,
+		cuerpo TEXT NOT NULL,
 		estado VARCHAR(50) NOT NULL DEFAULT 'pendiente',
 		fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 	);`
 
-	_, err := DB.Exec(query)
-	if err != nil {
+	if _, err := DB.Exec(query); err != nil {
 		log.Printf("Aviso al inicializar esquema: %v", err)
-		return
-	}
-
-	// Insertar datos de demo si la tabla está vacía
-	var count int
-	_ = DB.QueryRow("SELECT COUNT(*) FROM tareas").Scan(&count)
-	if count == 0 {
-		_, _ = DB.Exec(`
-			INSERT INTO tareas (id, titulo, estado) VALUES
-			('1', 'Configurar contenedores Docker y PostgreSQL', 'completado'),
-			('2', 'Configurar pipeline de CI y SonarQube', 'en_progreso'),
-			('3', 'Implementar pruebas de integración', 'pendiente');
-		`)
 	}
 }
