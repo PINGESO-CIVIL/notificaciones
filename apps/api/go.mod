@@ -1,4 +1,4 @@
-module tarea-api
+module notificaciones
 
 go 1.26.0
 

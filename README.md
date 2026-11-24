@@ -1,5 +1,5 @@
 # Microservicio Ejemplo — Tareas (DAS)
-
+tbd arreglar el md para grupo 10
 Repositorio base del microservicio de gestión de tareas siguiendo los lineamientos técnicos del curso **DAS (Desarrollo de Microservicios)**.
 
 ### Enlaces de Evidencia
