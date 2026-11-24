@@ -1,0 +1,7 @@
+# manejo de contraseñas, evita que pasen secretos
+# Gitleaks v8.30.1 y correr lefthook install en pc
+pre-commit:
+  parallel: true
+  commands:
+    secretos:
+      run: gitleaks protect --staged --redact --no-banner
