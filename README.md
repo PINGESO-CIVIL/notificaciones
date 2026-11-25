@@ -2,9 +2,9 @@
 
 Repositorio del microservicio **Paquete de Trabajo 10: Gateway de Notificaciones** desarrollado bajo los lineamientos técnicos del curso **DAS (Desarrollo de Microservicios)**.
 
-### Enlaces de Evidencia
-* **Pipeline de CI (GitHub Actions):** *(Pegar aquí la URL de la pestaña Actions de su repositorio en GitHub)*
-* **Panel de SonarQube:** *(Pegar aquí la URL pública/túnel del dashboard con `id=notificaciones`)* (Clave del proyecto: `notificaciones`)
+### Enlaces de Evidencia (cambiar despues al hacer el traspaso)
+- **Pipeline de CI (GitHub Actions):** https://github.com/DiegoVUsach/Grupo10-PINGESO-2026-2/actions
+- **Panel de SonarQube:** http://localhost:9000/dashboard?id=notificaciones (Clave del proyecto: `notificaciones`)
 
 ---
 
